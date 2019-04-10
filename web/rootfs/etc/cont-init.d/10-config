@@ -53,25 +53,23 @@ if [[ ! -f /config/nginx/site-confs/default ]]; then
 fi
 
 if [[ ! -f /config/config.js ]]; then
-    cp /defaults/config.js /config/config.js
-    sed -i \
-        -e "s#jitsi-meet.example.com#$XMPP_DOMAIN#g" \
-        -e "s#bosh:.*#bosh: '/http-bind',#" \
-        -e "s#muc:.*#muc: '${XMPP_MUC_DOMAIN}',#" \
-        -e "s#// focusUserJid:.*#focusUserJid: '${JICOFO_AUTH_USER}@${XMPP_AUTH_DOMAIN}',#" \
-        /config/config.js
+    # Add environment variables to config
+    tpl /defaults/config.json > /tmp/default.json
 
-    if [[ $ENABLE_AUTH -eq 1 ]]; then
-        if [[ $ENABLE_GUESTS -eq 1 ]]; then
-            sed -i \
-                -e "s#// anonymousdomain:.*#anonymousdomain: '${XMPP_GUEST_DOMAIN}',#" \
-                /config/config.js
-        fi
+    # Remove comments from config.json
+    config=$(jsonlint-py -Sf /tmp/default.json)
+    echo "$config" > /tmp/default.json
 
-        sed -i \
-            -e "s#// authdomain:.*#authdomain: '${XMPP_DOMAIN}',#" \
-            /config/config.js
+    if [[ -f /config/config.json ]]; then
+        # Remove comments from custom config.json
+        jsonlint-py -Sf /config/config.json > /tmp/custom.json
+
+        # Merge custom config into default config
+        config=$(jq -s '.[0] * .[1]' /tmp/default.json /tmp/custom.json)
     fi
+
+    # Save merged config as .js file
+    tpl /defaults/config.js --json "{\"config\": $config}" > /config/config.js
 fi
 
 if [[ ! -f /config/interface_config.js ]]; then

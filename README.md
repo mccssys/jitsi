@@ -186,6 +186,11 @@ Variable | Description | Default value
 `DISABLE_HTTPS` | Disable HTTPS, this can be useful if TLS connections are going to be handled outside of this setup | 1
 `ENABLE_HTTP_REDIRECT` | Redirects HTTP traffic to HTTPS | 1
 
+#### Jitsi Meet `config.js`
+To change a setting in the config.js you have to add a `config.json` to the `/config` volume for the web container.
+
+After this file was added it will be merged into the default configuration.
+
 ### Running on a LAN environment
 
 If running in a LAN environment (as well as on the public Internet, via NAT) is a requirement,
